@@ -1,3 +1,4 @@
+import 'package:crud_project/utils/database_helper.dart';
 import 'package:flutter/material.dart';
 
 import 'models/contact.dart';
@@ -32,14 +33,28 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final Contact _contact = Contact(
-    name: '',
-    mobile: '',
-    id: 1,
-
+  final Contact _contact = Contact(mobile: '', name: '', id: null
   );
-  final List<Contact> _contacts = [];
+  List<Contact> _contacts = [];
+  late DatabaseHelper _dbHelper;
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+
+    super.initState();
+    setState(() {
+      _dbHelper = DatabaseHelper.instance;
+    });
+    _refreshContactList();
+  }
+
+  _refreshContactList() async {
+    List<Contact> x = await _dbHelper.fetchContacts();
+    setState(() {
+      _contacts = x;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,14 +103,13 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
 
-  _onSubmit() {
+  _onSubmit() async {
     var form = _formKey.currentState;
     if (form!.validate()) {
       form.save();
-      setState(() {
-        _contacts.add(Contact(name: _contact.name, mobile: _contact.mobile, id: 1));
-      });
+      await _dbHelper.insertContact(_contact);
       form.reset();
+      await _refreshContactList();
     }
   }
 
@@ -112,12 +126,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       color: Colors.red,
                     ),
                     title: Text(
-                      _contacts[index].name.toUpperCase(),
+                      _contacts[index].name!.toUpperCase(),
                       style: const TextStyle(color: Colors.black87),
                     ),
                     subtitle: Text(
-                      _contacts[index].mobile.toUpperCase(),
+                      _contacts[index].mobile!.toUpperCase(),
                     ),
+                    onTap: (){},
                   ),
                 ],
               );
